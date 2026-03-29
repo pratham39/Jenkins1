@@ -1,13 +1,12 @@
 name: Build and Deploy WAR with Dynatrace
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+push:
+branches:
+- main
+workflow_dispatch:
 
 jobs:
-
 build:
 runs-on: ubuntu-latest
 
@@ -43,20 +42,17 @@ steps:
     with:
       name: app
 
-  # 🔐 Login to Azure
   - name: Azure Login
     uses: azure/login@v2
     with:
       creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  # 🚀 Deploy WAR
   - name: Deploy to Azure App Service
     uses: azure/webapps-deploy@v3
     with:
       app-name: MyTESTAPPS
       package: '*.war'
 
-  # 🔥 Configure Dynatrace
   - name: Configure Dynatrace Settings
     run: |
       az webapp config appsettings set \
@@ -68,7 +64,6 @@ steps:
         DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
         START_APP_CMD="catalina.sh run"
 
-  # 🔄 Restart App
   - name: Restart App Service
     run: |
       az webapp restart \
