@@ -1,0 +1,72 @@
+name: Deploy WAR with Dynatrace
+
+on:
+push:
+branches:
+- main
+workflow_dispatch:
+
+jobs:
+build:
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Setup Java
+    uses: actions/setup-java@v4
+    with:
+      java-version: '17'
+      distribution: 'microsoft'
+
+  - name: Build WAR
+    run: mvn clean package
+
+  - name: Upload Artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: app
+      path: target/*.war
+```
+
+deploy:
+runs-on: ubuntu-latest
+needs: build
+
+```
+steps:
+  - name: Download Artifact
+    uses: actions/download-artifact@v4
+    with:
+      name: app
+
+  - name: Azure Login
+    uses: azure/login@v2
+    with:
+      creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+  - name: Deploy to Azure
+    uses: azure/webapps-deploy@v3
+    with:
+      app-name: MyTESTAPPS
+      package: '*.war'
+
+  - name: Configure Dynatrace
+    run: |
+      az webapp config appsettings set \
+        --name MyTESTAPPS \
+        --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+        --settings \
+        DT_TENANT=${{ secrets.DT_TENANT }} \
+        DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
+        DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
+        START_APP_CMD="catalina.sh run"
+
+  - name: Restart App
+    run: |
+      az webapp restart \
+        --name MyTESTAPPS \
+        --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+```
