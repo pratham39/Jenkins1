@@ -34,7 +34,8 @@ jobs:
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            START_APP_CMD="catalina.sh run"
+            DT_ENABLED=true
+            START_APP_CMD="java -jar /home/site/wwwroot/ROOT.war"
 
       - name: Restart App
         run: |
