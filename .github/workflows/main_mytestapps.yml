@@ -1,9 +1,10 @@
 name: Build and Deploy WAR with Dynatrace
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
 
