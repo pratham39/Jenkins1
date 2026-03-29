@@ -7,48 +7,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'microsoft'
-
-      - name: Build WAR
-        run: mvn clean package
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app
-          path: target/*.war
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app
-
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure
+      - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
-          package: '*.war'
+          package: "*.war"
 
       - name: Configure Dynatrace
         run: |
