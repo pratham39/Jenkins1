@@ -10,7 +10,6 @@ jobs:
 build:
 runs-on: ubuntu-latest
 
-```
 steps:
   - name: Checkout
     uses: actions/checkout@v4
@@ -29,13 +28,11 @@ steps:
     with:
       name: app
       path: target/*.war
-```
 
 deploy:
 runs-on: ubuntu-latest
 needs: build
 
-```
 steps:
   - name: Download Artifact
     uses: actions/download-artifact@v4
@@ -69,4 +66,3 @@ steps:
       az webapp restart \
         --name MyTESTAPPS \
         --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
-```
