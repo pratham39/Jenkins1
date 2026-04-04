@@ -26,7 +26,18 @@ jobs:
           app-name: MyTESTAPPS
           package: ROOT.war
 
-      #Configure Dynatrace (FIXED URL)
+      #Install Dynatrace OneAgent (persistent path)
+      - name: Install Dynatrace OneAgent
+        run: |
+          mkdir -p /home/site/wwwroot/dynatrace
+          cd /home/site/wwwroot/dynatrace
+
+          wget -O Dynatrace-OneAgent.sh "${{ secrets.DT_CONNECTION_POINT }}/api/v1/deployment/installer/agent/unix/default/latest?Api-Token=${{ secrets.DT_TENANTTOKEN }}&flavor=default&include=java"
+
+          chmod +x Dynatrace-OneAgent.sh
+          ./Dynatrace-OneAgent.sh APP_LOG_CONTENT_ACCESS=1
+
+      #Configure App Settings + JVM Injection
       - name: Configure Dynatrace
         run: |
           az webapp config appsettings set \
@@ -35,16 +46,9 @@ jobs:
             --settings \
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
-            DT_CONNECTION_POINT=https://${{ secrets.DT_TENANT }} \
-            DT_ENABLED=true
-
-      #Startup Command (Manual OneAgent Install)
-      - name: Set Startup Command
-        run: |
-          az webapp config set \
-            --name MyTESTAPPS \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --startup-file "bash -c 'wget -O Dynatrace-OneAgent.sh https://${{ secrets.DT_TENANT }}/api/v1/deployment/installer/agent/unix/default/latest?Api-Token=${{ secrets.DT_TENANTTOKEN }}\&flavor=default\&include=java && chmod +x Dynatrace-OneAgent.sh && ./Dynatrace-OneAgent.sh APP_LOG_CONTENT_ACCESS=1 && export LD_PRELOAD=/opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so && /usr/local/tomcat/bin/catalina.sh run'"
+            DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
+            DT_ENABLED=true \
+            JAVA_OPTS="-agentpath:/home/site/wwwroot/dynatrace/oneagent/agent/lib64/liboneagentloader.so"
 
       #Restart App
       - name: Restart App
