@@ -29,7 +29,7 @@ jobs:
       #Install Dynatrace OneAgent (persistent path)
       - name: Install Dynatrace OneAgent
         run: |
-          mkdir -p /home/site/wwwroot/dynatrace
+          sudo mkdir -p /home/site/wwwroot/dynatrace
           cd /home/site/wwwroot/dynatrace
 
           wget -O Dynatrace-OneAgent.sh "${{ secrets.DT_CONNECTION_POINT }}/api/v1/deployment/installer/agent/unix/default/latest?Api-Token=${{ secrets.DT_TENANTTOKEN }}&flavor=default&include=java"
