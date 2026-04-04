@@ -19,25 +19,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      #Deploy WAR
+      #Deploy WAR to Azure App Service
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
           package: ROOT.war
 
-      #Install Dynatrace OneAgent (persistent path)
-      - name: Install Dynatrace OneAgent
-        run: |
-          sudo mkdir -p /home/site/wwwroot/dynatrace
-          cd /home/site/wwwroot/dynatrace
-
-          wget --no-check-certificate -O Dynatrace-OneAgent.sh "https://${{ secrets.DT_TENANT }}/api/v1/deployment/installer/agent/unix/default/latest?Api-Token=${{ secrets.DT_TENANTTOKEN }}&flavor=default&include=java"
-
-          chmod +x Dynatrace-OneAgent.sh
-          ./Dynatrace-OneAgent.sh APP_LOG_CONTENT_ACCESS=1
-
-      #Configure App Settings + JVM Injection
+      #Configure Dynatrace (PaaS Injection)
       - name: Configure Dynatrace
         run: |
           az webapp config appsettings set \
@@ -46,11 +35,10 @@ jobs:
             --settings \
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
-            DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            DT_ENABLED=true \
-            JAVA_OPTS="-agentpath:/home/site/wwwroot/dynatrace/oneagent/agent/lib64/liboneagentloader.so"
+            DT_CONNECTION_POINT=https://${{ secrets.DT_TENANT }} \
+            DT_ENABLED=true
 
-      #Restart App
+      #Restart App Service
       - name: Restart App
         run: |
           az webapp restart \
