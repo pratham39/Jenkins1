@@ -19,12 +19,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      #Deploy WAR
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
           package: ROOT.war
 
+      #Configure Dynatrace + Startup Command
       - name: Configure Dynatrace
         run: |
           az webapp config appsettings set \
@@ -35,8 +37,14 @@ jobs:
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
             DT_ENABLED=true
-            START_APP_CMD="java -jar /home/site/wwwroot/ROOT.war"
 
+          #Set Startup Command (IMPORTANT)
+          az webapp config set \
+            --name MyTESTAPPS \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --startup-file "bash -c 'wget -O Dynatrace-OneAgent.sh \"$DT_CONNECTION_POINT/api/v1/deployment/installer/agent/unix/default/latest?Api-Token=$DT_TENANTTOKEN&flavor=default&include=java\" && chmod +x Dynatrace-OneAgent.sh && ./Dynatrace-OneAgent.sh APP_LOG_CONTENT_ACCESS=1 && export LD_PRELOAD=/opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so && /usr/local/tomcat/bin/catalina.sh run'"
+
+      # Restart App
       - name: Restart App
         run: |
           az webapp restart \
