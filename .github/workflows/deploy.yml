@@ -43,7 +43,7 @@ jobs:
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            START_APP_CMD="/home/site/wwwroot/oneagent-installer-wrapper.sh /usr/local/tomcat/bin/catalina.sh run"
+            START_APP_CMD= "/usr/local/tomcat/bin/catalina.sh run"
             
 
       # Restart App
