@@ -43,7 +43,7 @@ jobs:
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            START_APP_CMD="/home/site/wwwroot/oneagent-installer-wrapper.sh"
+            
 
       # Restart App
       - name: Restart App
