@@ -29,8 +29,8 @@ jobs:
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
-          app-name: MyTESTAPPS
-          package: ROOT.war
+          app-name: PrathameshTestApp
+          package: sample.war
 
       # Configure App Settings (KEEP your config + wrapper)
       - name: Configure App Settings
