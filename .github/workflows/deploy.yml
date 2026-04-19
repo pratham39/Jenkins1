@@ -22,6 +22,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       #Deploy WAR to App Service
+      #Deploy WAR to Azure App Service
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
@@ -30,6 +31,8 @@ jobs:
 
       #Configure App Settings (Dynatrace + Tomcat)
       - name: Configure App Settings
+      #Configure Dynatrace (PaaS Injection)
+      - name: Configure Dynatrace
         run: |
           az webapp config appsettings set \
             --name MyTESTAPPS \
@@ -41,6 +44,8 @@ jobs:
             DT_ENABLED=true \
             CATALINA_OPTS= "-javaagent:/opt/dynatrace/oneagent/agent/lib64/liboneagentloader.so" \
             START_APP_CMD="/usr/local/tomcat/bin/catalina.sh run"
+            DT_CONNECTION_POINT=https://${{ secrets.DT_TENANT }} \
+            DT_ENABLED=true
 
       #Restart App Service
       - name: Restart App
