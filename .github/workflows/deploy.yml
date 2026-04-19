@@ -1,4 +1,4 @@
-name: Deploy WAR with Dynatrace
+name: Deploy WAR with Dynatrace (Wrapper)
 
 on:
   push:
@@ -11,40 +11,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Make wrapper executable
+      - name: Make wrapper executable
+        run: chmod +x oneagent-installer-wrapper.sh
+
+      # Azure Login
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      #Deploy WAR
+      # Deploy WAR
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
           package: ROOT.war
 
-      #Configure Dynatrace + Startup Command
-      - name: Configure Dynatrace
+      # Configure Dynatrace + Startup Script
+      - name: Configure App Settings
         run: |
           az webapp config appsettings set \
             --name MyTESTAPPS \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings \
+            DT_ENABLED=true \
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            DT_ENABLED=true
+            WEBSITE_STARTUP_FILE=oneagent-installer-wrapper.sh \
+            CATALINA_OPTS="-Dspring.profiles.active=dev -Dlogback.configurationFile=classpath:logback-spring.xml"
 
-          #Set Startup Command (IMPORTANT)
-          az webapp config set \
-            --name MyTESTAPPS \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --startup-file "bash -c 'wget -O Dynatrace-OneAgent.sh \"$DT_CONNECTION_POINT/api/v1/deployment/installer/agent/unix/default/latest?Api-Token=$DT_TENANTTOKEN&flavor=default&include=java\" && chmod +x Dynatrace-OneAgent.sh && ./Dynatrace-OneAgent.sh APP_LOG_CONTENT_ACCESS=1 && export LD_PRELOAD=/opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so && /usr/local/tomcat/bin/catalina.sh run'"
-
-      # Restart App
+      # Restart App Service
       - name: Restart App
         run: |
           az webapp restart \
