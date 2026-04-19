@@ -1,4 +1,4 @@
-name: Deploy WAR with Dynatrace (Wrapper)
+name: Deploy WAR with Dynatrace (Java Agent Mode)
 
 on:
   push:
@@ -11,42 +11,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
+      # 🔹 Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Make wrapper executable
-      - name: Make wrapper executable
-        run: chmod +x oneagent-installer-wrapper.sh
-
-      # Azure Login
+      #Azure Login
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Deploy WAR
+      #Deploy WAR to App Service
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
           package: ROOT.war
 
-      # Configure Dynatrace + Startup Script
+      #Configure App Settings (Dynatrace + Tomcat)
       - name: Configure App Settings
         run: |
           az webapp config appsettings set \
             --name MyTESTAPPS \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings \
-            DT_ENABLED=true \
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            WEBSITE_STARTUP_FILE=oneagent-installer-wrapper.sh \
-            CATALINA_OPTS="-Dspring.profiles.active=dev -Dlogback.configurationFile=classpath:logback-spring.xml"
+            DT_ENABLED=true \
+            CATALINA_OPTS= "-javaagent:/opt/dynatrace/oneagent/agent/lib64/liboneagentloader.so" \
+            START_APP_CMD="/usr/local/tomcat/bin/catalina.sh run"
 
-      # Restart App Service
+      #Restart App Service
       - name: Restart App
         run: |
           az webapp restart \
