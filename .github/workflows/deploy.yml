@@ -50,5 +50,5 @@ jobs:
       - name: Restart App
         run: |
           az webapp restart \
-            --name MyTESTAPPS \
+            --name PrathameshTestApp  \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
