@@ -30,13 +30,13 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
-          package: *.war
+          package: ROOT.war
 
       # Configure App Settings (KEEP your config + wrapper)
       - name: Configure App Settings
         run: |
           az webapp config appsettings set \
-            --name MyTESTAPPS \
+            --name PrathameshTestApp \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings \
             DT_ENABLED=true \
