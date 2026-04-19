@@ -15,8 +15,8 @@ chmod +x Dynatrace-OneAgent.sh
 echo "===== Dynatrace OneAgent Installed ====="
 
 # Enable auto-injection
-export LD_PRELOAD=/opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so
+export LD_PRELOAD=/opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so:$LD_PRELOAD
 
-echo "===== Starting Tomcat ====="
+echo "===== Starting Application via START_APP_CMD ====="
 
-/usr/local/tomcat/bin/catalina.sh run
+exec "$@"
