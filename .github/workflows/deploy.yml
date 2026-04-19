@@ -30,7 +30,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
-          package: ROOT.war
+          package: *.war
 
       # Configure App Settings (KEEP your config + wrapper)
       - name: Configure App Settings
