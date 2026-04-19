@@ -1,4 +1,4 @@
-name: Deploy WAR with Dynatrace (Java Agent Mode)
+name: Deploy WAR with Dynatrace (Hybrid Mode)
 
 on:
   push:
@@ -11,43 +11,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 🔹 Checkout
+      # Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
-      #Azure Login
+      # Make wrapper executable
+      - name: Make wrapper executable
+        run: chmod +x oneagent-installer-wrapper.sh
+
+      # Azure Login
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      #Deploy WAR to App Service
-      #Deploy WAR to Azure App Service
+      # Deploy WAR
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: MyTESTAPPS
           package: ROOT.war
 
-      #Configure App Settings (Dynatrace + Tomcat)
+      # Configure App Settings (KEEP your config + wrapper)
       - name: Configure App Settings
-      #Configure Dynatrace (PaaS Injection)
-      - name: Configure Dynatrace
         run: |
           az webapp config appsettings set \
             --name MyTESTAPPS \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings \
+            DT_ENABLED=true \
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            DT_ENABLED=true \
-            CATALINA_OPTS= "-javaagent:/opt/dynatrace/oneagent/agent/lib64/liboneagentloader.so" \
-            START_APP_CMD="/usr/local/tomcat/bin/catalina.sh run"
-            DT_CONNECTION_POINT=https://${{ secrets.DT_TENANT }} \
-            DT_ENABLED=true
+            CATALINA_OPTS="-Dspring.profiles.active=dev -Dlogback.configurationFile=classpath:logback-spring.xml -javaagent:/opt/dynatrace/oneagent/agent/lib64/liboneagentloader.so" \
+            START_APP_CMD="/home/site/wwwroot/oneagent-installer-wrapper.sh"
 
-      #Restart App Service
+      # Restart App
       - name: Restart App
         run: |
           az webapp restart \
