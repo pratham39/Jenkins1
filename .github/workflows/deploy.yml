@@ -1,4 +1,4 @@
-name: Deploy WAR with Dynatrace (Corrected)
+name: Deploy WAR with Dynatrace (Final Fixed)
 
 on:
   push:
@@ -11,33 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #Checkout
+      #Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Azure Login
+      #Azure Login
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Deploy WAR
+      #Deploy WAR
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: PrathameshTestApp
           package: sample.war
 
-      # Upload wrapper script to App Service
+      #Upload OneAgent Wrapper to App Service (FIXED)
       - name: Upload OneAgent Wrapper
         run: |
           az webapp deploy \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --name PrathameshTestApp \
             --src-path oneagent-installer-wrapper.sh \
-            --type static
+            --type static \
+            --target-path /home/site/wwwroot/oneagent-installer-wrapper.sh
 
-      # 5. Configure App Settings (CRITICAL)
+      #Configure App Settings (CRITICAL)
       - name: Configure App Settings
         run: |
           az webapp config appsettings set \
@@ -49,7 +50,7 @@ jobs:
             CATALINA_OPTS="-javaagent:/home/site/wwwroot/oneagent/agent/lib64/liboneagentloader.so" \
             START_APP_CMD="chmod +x /home/site/wwwroot/oneagent-installer-wrapper.sh && /home/site/wwwroot/oneagent-installer-wrapper.sh && export CATALINA_OPTS=\"\$CATALINA_OPTS\" && /usr/local/tomcat/bin/catalina.sh run"
 
-      # 6. Restart App
+      #Restart App Service
       - name: Restart App
         run: |
           az webapp restart \
