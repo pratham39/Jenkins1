@@ -1,4 +1,4 @@
-name: Deploy WAR with Dynatrace (Hybrid Mode)
+name: Deploy WAR with Dynatrace (Azure App Service - Java)
 
 on:
   push:
@@ -11,28 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout
+      #Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Make wrapper executable
+      #Make wrapper executable
       - name: Make wrapper executable
-        run: chmod +x oneagent-installer-wrapper.sh
+        run: chmod +x scripts/oneagent-installer-wrapper.sh
 
-      # Azure Login
+      #Azure Login
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Deploy WAR
+      #Deploy WAR to App Service
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: PrathameshTestApp
           package: sample.war
 
-      # Configure App Settings (KEEP your config + wrapper)
+      #Install Dynatrace OneAgent via Wrapper
+      - name: Install OneAgent via Wrapper
+        env:
+          DT_CONNECTION_POINT: ${{ secrets.DT_CONNECTION_POINT }}
+          DT_TENANTTOKEN: ${{ secrets.DT_TENANTTOKEN }}
+        run: |
+          ./scripts/oneagent-installer-wrapper.sh
+
+      #Configure App Settings (CRITICAL STEP)
       - name: Configure App Settings
         run: |
           az webapp config appsettings set \
@@ -43,12 +51,12 @@ jobs:
             DT_TENANT=${{ secrets.DT_TENANT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-          
-            
+            CATALINA_OPTS="-Dspring.profiles.active=prd -javaagent:/home/site/wwwroot/oneagent/agent/lib64/liboneagentloader.so" \
+            START_APP_CMD="export CATALINA_OPTS=\"\$CATALINA_OPTS\" && /usr/local/tomcat/bin/catalina.sh run"
 
-      # Restart App
+      # Restart App Service
       - name: Restart App
         run: |
           az webapp restart \
-            --name PrathameshTestApp  \
+            --name PrathameshTestApp \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
