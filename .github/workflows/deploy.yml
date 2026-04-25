@@ -25,7 +25,7 @@ jobs:
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
-          app-name: PrathameshTestApp
+          app-name: PRATHAMTESTWEB
           package: sample.war
 
       #Upload OneAgent Wrapper to App Service (FIXED)
@@ -33,7 +33,7 @@ jobs:
         run: |
           az webapp deploy \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --name PrathameshTestApp \
+            --name PRATHAMTESTWEB \
             --src-path oneagent-installer-wrapper.sh \
             --type static \
             --target-path /home/site/wwwroot/oneagent-installer-wrapper.sh
@@ -42,17 +42,17 @@ jobs:
       - name: Configure App Settings
         run: |
           az webapp config appsettings set \
-            --name PrathameshTestApp \
+            --name PRATHAMTESTWEB \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
-            CATALINA_OPTS="-javaagent:/home/site/wwwroot/oneagent/agent/lib64/liboneagentloader.so" \
-            START_APP_CMD=/usr/local/tomcat/bin/catalina.sh run"
+            
 
       #Restart App Service
       - name: Restart App
         run: |
           az webapp restart \
-            --name PrathameshTestApp \
+            --name PRATHAMTESTWEB \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+
