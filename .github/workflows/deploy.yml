@@ -48,7 +48,7 @@ jobs:
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
             DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             CATALINA_OPTS="-javaagent:/home/site/wwwroot/oneagent/agent/lib64/liboneagentloader.so" \
-            START_APP_CMD="chmod +x /home/site/wwwroot/oneagent-installer-wrapper.sh && /home/site/wwwroot/oneagent-installer-wrapper.sh && export CATALINA_OPTS=\"\$CATALINA_OPTS\" && /usr/local/tomcat/bin/catalina.sh run"
+            START_APP_CMD=/usr/local/tomcat/bin/catalina.sh run"
 
       #Restart App Service
       - name: Restart App
