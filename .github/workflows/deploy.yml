@@ -17,7 +17,7 @@ jobs:
 
       #Make wrapper executable
       - name: Make wrapper executable
-        run: chmod +x scripts/oneagent-installer-wrapper.sh
+        run: chmod +x oneagent-installer-wrapper.sh
 
       #Azure Login
       - name: Azure Login
@@ -38,7 +38,7 @@ jobs:
           DT_CONNECTION_POINT: ${{ secrets.DT_CONNECTION_POINT }}
           DT_TENANTTOKEN: ${{ secrets.DT_TENANTTOKEN }}
         run: |
-          ./scripts/oneagent-installer-wrapper.sh
+          ./oneagent-installer-wrapper.sh
 
       #Configure App Settings (CRITICAL STEP)
       - name: Configure App Settings
