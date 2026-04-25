@@ -1,4 +1,4 @@
-name: Deploy WAR with Dynatrace (Azure App Service - Java)
+name: Deploy WAR with Dynatrace (Corrected)
 
 on:
   push:
@@ -11,50 +11,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #Checkout repository
+      #Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
-      #Make wrapper executable
-      - name: Make wrapper executable
-        run: chmod +x oneagent-installer-wrapper.sh
-
-      #Azure Login
+      # Azure Login
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      #Deploy WAR to App Service
+      # Deploy WAR
       - name: Deploy WAR
         uses: azure/webapps-deploy@v3
         with:
           app-name: PrathameshTestApp
           package: sample.war
 
-      #Install Dynatrace OneAgent via Wrapper
-      - name: Install OneAgent via Wrapper
-        env:
-          DT_CONNECTION_POINT: ${{ secrets.DT_CONNECTION_POINT }}
-          DT_TENANTTOKEN: ${{ secrets.DT_TENANTTOKEN }}
+      # Upload wrapper script to App Service
+      - name: Upload OneAgent Wrapper
         run: |
-          ./oneagent-installer-wrapper.sh
+          az webapp deploy \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name PrathameshTestApp \
+            --src-path oneagent-installer-wrapper.sh \
+            --type static
 
-      #Configure App Settings (CRITICAL STEP)
+      # 5. Configure App Settings (CRITICAL)
       - name: Configure App Settings
         run: |
           az webapp config appsettings set \
             --name PrathameshTestApp \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings \
-            DT_ENABLED=true \
-            DT_TENANT=${{ secrets.DT_TENANT }} \
-            DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
             DT_CONNECTION_POINT=${{ secrets.DT_CONNECTION_POINT }} \
-            CATALINA_OPTS="-Dspring.profiles.active=prd -javaagent:/home/site/wwwroot/oneagent/agent/lib64/liboneagentloader.so" \
-            START_APP_CMD="export CATALINA_OPTS=\"\$CATALINA_OPTS\" && /usr/local/tomcat/bin/catalina.sh run"
+            DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
+            CATALINA_OPTS="-javaagent:/home/site/wwwroot/oneagent/agent/lib64/liboneagentloader.so" \
+            START_APP_CMD="chmod +x /home/site/wwwroot/oneagent-installer-wrapper.sh && /home/site/wwwroot/oneagent-installer-wrapper.sh && export CATALINA_OPTS=\"\$CATALINA_OPTS\" && /usr/local/tomcat/bin/catalina.sh run"
 
-      # Restart App Service
+      # 6. Restart App
       - name: Restart App
         run: |
           az webapp restart \
