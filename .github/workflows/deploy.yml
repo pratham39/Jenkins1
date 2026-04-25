@@ -1,0 +1,45 @@
+name: Deploy WAR with Dynatrace
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      #Deploy WAR to Azure App Service
+      - name: Deploy WAR
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: MyTESTAPPS
+          package: ROOT.war
+
+      #Configure Dynatrace (PaaS Injection)
+      - name: Configure Dynatrace
+        run: |
+          az webapp config appsettings set \
+            --name MyTESTAPPS \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings \
+            DT_TENANT=${{ secrets.DT_TENANT }} \
+            DT_TENANTTOKEN=${{ secrets.DT_TENANTTOKEN }} \
+            DT_CONNECTION_POINT=https://${{ secrets.DT_TENANT }} \
+            DT_ENABLED=true
+      #Restart App Service
+      - name: Restart App
+        run: |
+          az webapp restart \
+            --name MyTESTAPPS \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
